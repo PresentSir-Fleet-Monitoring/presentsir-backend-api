@@ -1,6 +1,7 @@
 package com.ranjit.ps.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -13,6 +14,7 @@ import java.util.Set;
 public class User {
     @Id
     private String email; // Email as the primary key
+    @JsonIgnore
     private String password;
     private String name;
 

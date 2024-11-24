@@ -13,8 +13,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Getter
-@Setter
 public class Bus {
 
     @Id
@@ -32,5 +30,29 @@ public class Bus {
     public Bus(Long busId, String routeName) {
         this.busId = busId;
         this.routeName = routeName;
+    }
+
+    public Long getBusId() {
+        return busId;
+    }
+
+    public void setBusId(Long busId) {
+        this.busId = busId;
+    }
+
+    public String getRouteName() {
+        return routeName;
+    }
+
+    public void setRouteName(String routeName) {
+        this.routeName = routeName;
+    }
+
+    public Set<User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<User> users) {
+        this.users = users;
     }
 }
