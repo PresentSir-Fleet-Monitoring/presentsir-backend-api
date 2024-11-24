@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ait.ps</groupId>
     <artifactId>Presentsir</artifactId>
-        <packaging>jar</packaging>
+        <packaging>war</packaging>
     <version>1.0-SNAPSHOT</version>
     <name>Presentsir Maven Webapp</name>
     <url>http://maven.apache.org</url>
@@ -155,6 +155,17 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <addResources>false</addResources>
+                </configuration>
+            </plugin>
+
+            <!-- Maven WAR Plugin to configure WAR file generation -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.1</version>  <!-- Latest version or your preferred version -->
+                <configuration>
+                    <outputDirectory>${project.build.directory}</outputDirectory>
+                    <warName>Presentsir</warName>
                 </configuration>
             </plugin>
         </plugins>
