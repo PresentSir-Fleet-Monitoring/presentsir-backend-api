@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  app:
+    image: my-spring-boot-app:latest
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_URL=jdbc:postgresql://aws-0-ap-south-1.pooler.supabase.com:6543/postgres
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=givemeaccess@485
+    volumes:
+      - ./logs:/app/logs
