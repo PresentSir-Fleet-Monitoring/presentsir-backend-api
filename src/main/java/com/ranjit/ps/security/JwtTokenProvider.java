@@ -31,6 +31,9 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public long getTokenExpiry(){
+        return EXPIRATION_TIME;
+    }
     public List<String> getRolesFromToken(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(SIGNING_KEY)
