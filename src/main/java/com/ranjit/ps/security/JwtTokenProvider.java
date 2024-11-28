@@ -18,7 +18,8 @@ public class JwtTokenProvider {
     private String secretKey; // Use an application property to define the secret
     private static final Key SIGNING_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512); // Generates a secure 512-bit key
 
-    private static final long EXPIRATION_TIME = 86400000; // 24 hours
+//    private static final long EXPIRATION_TIME = 86400000; // 24 hours
+    private static final long EXPIRATION_TIME = 31_536_000_000L; // 1 year
 
     // Generate JWT token for authenticated user
     public String generateToken(String username, List<String> roles) {

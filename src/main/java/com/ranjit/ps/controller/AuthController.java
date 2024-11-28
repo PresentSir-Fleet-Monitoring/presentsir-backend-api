@@ -40,7 +40,7 @@ public class AuthController {
             return "register";
         }
         try {
-            userService.registerUser(user, busId);
+            userService.registerUser(user);
 
             String messages = DiscordMessageFormatter.formatUserJoinedMessage(user);
             new DiscordWebhookService().sendDiscordMessage(messages);
