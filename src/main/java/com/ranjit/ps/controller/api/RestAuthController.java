@@ -2,6 +2,7 @@ package com.ranjit.ps.controller.api;
 
 import com.ranjit.ps.exceptions.UserNotFoundException;
 import com.ranjit.ps.model.User;
+import com.ranjit.ps.model.dto.RegisterUserRequest;
 import com.ranjit.ps.security.JwtTokenProvider;
 import com.ranjit.ps.service.UserService;
 import jakarta.validation.Valid;
@@ -35,21 +36,29 @@ public class RestAuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody User user) {
-        // Check if user already exists
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterUserRequest request) {
+        User user = request.getUser();
+        long busId = request.getBusId();
+
         if (userService.isUserExist(user.getEmail())) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("User already has an account with this email");
+                    .body("User with this email already exists.");
         }
 
-        // Register the user
         try {
-            userService.registerUser(user);
+            User registeredUser = userService.registerUser(user, busId);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Account created successfully");
+                    .body(Map.of(
+                            "message", "Account created successfully",
+                            "userId", registeredUser.getEmail()
+                    ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("An error occurred while creating the account");
+                    .body("An error occurred while creating the account.");
         }
     }
 
