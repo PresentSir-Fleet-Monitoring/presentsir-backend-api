@@ -1,16 +1,14 @@
 package com.ranjit.ps.service;
 
+import com.ranjit.ps.model.Bus;
 import com.ranjit.ps.model.Role;
 import com.ranjit.ps.model.User;
-import com.ranjit.ps.model.Bus;
+import com.ranjit.ps.repository.BusRepository;
 import com.ranjit.ps.repository.RoleRepository;
 import com.ranjit.ps.repository.UserRepository;
-import com.ranjit.ps.repository.BusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,12 +32,12 @@ public class UserService {
         user.setPassword(encoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
-    public User registerUser(User user, Long busId) {
+    public User registerUser(User user) {
         // Hash the password
         user.setPassword(encoder.encode(user.getPassword()));
 
         // Set the Bus entity for the User
-        Bus bus = busRepository.findById(busId)
+        Bus bus = busRepository.findById(user.getBus().getBusId())
                 .orElseThrow(() -> new RuntimeException("Bus not found"));
         user.setBus(bus);
 
@@ -51,8 +49,9 @@ public class UserService {
         // Save the User
         return userRepository.save(user);
     }
-
-
+    public Boolean isUserExist(String email){
+        return userRepository.existsByEmail(email);
+    }
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
