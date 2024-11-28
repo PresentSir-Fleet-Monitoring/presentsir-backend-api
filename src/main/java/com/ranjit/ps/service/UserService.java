@@ -32,12 +32,12 @@ public class UserService {
         user.setPassword(encoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
-    public User registerUser(User user) {
+    public User registerUser(User user,long busId) {
         // Hash the password
         user.setPassword(encoder.encode(user.getPassword()));
 
         // Set the Bus entity for the User
-        Bus bus = busRepository.findById(user.getBus().getBusId())
+        Bus bus = busRepository.findById(busId)
                 .orElseThrow(() -> new RuntimeException("Bus not found"));
         user.setBus(bus);
 
