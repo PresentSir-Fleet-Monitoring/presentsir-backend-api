@@ -1,5 +1,6 @@
 package com.ranjit.ps.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,6 +22,7 @@ public class Bus {
     private String routeName;
 
     @OneToMany(mappedBy = "bus", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference("bus-user")
     private Set<User> users = new HashSet<>(); // Multiple users can be assigned to a single bus
 
     // Constructors are optional when using Lombok

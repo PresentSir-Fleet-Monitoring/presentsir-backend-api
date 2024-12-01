@@ -14,7 +14,6 @@ import java.util.Set;
 public class User {
     @Id
     private String email; // Email as the primary key
-    @JsonIgnore
     private String password;
     private String name;
 
@@ -23,7 +22,7 @@ public class User {
 
     @ManyToOne
     @JoinColumn(name = "bus_id") // Foreign key linking to Bus
-    @JsonBackReference
+    @JsonBackReference("user-bus")
     private Bus bus; // A user can be assigned to only one bus
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
