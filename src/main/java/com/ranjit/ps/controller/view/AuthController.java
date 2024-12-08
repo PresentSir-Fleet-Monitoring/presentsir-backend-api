@@ -1,6 +1,5 @@
-package com.ranjit.ps.controller;
+package com.ranjit.ps.controller.view;
 
-import com.ranjit.ps.model.DiscordMessage;
 import com.ranjit.ps.model.User;
 import com.ranjit.ps.repository.BusRepository;
 import com.ranjit.ps.service.DiscordWebhookService;
