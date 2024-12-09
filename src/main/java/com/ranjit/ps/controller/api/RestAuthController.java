@@ -4,7 +4,9 @@ import com.ranjit.ps.exceptions.UserNotFoundException;
 import com.ranjit.ps.model.User;
 import com.ranjit.ps.model.dto.RegisterUserRequest;
 import com.ranjit.ps.security.JwtTokenProvider;
+import com.ranjit.ps.service.DiscordWebhookService;
 import com.ranjit.ps.service.UserService;
+import com.ranjit.ps.utils.DiscordMessageFormatter;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -47,6 +49,9 @@ public class RestAuthController {
 
         try {
             User registeredUser = userService.registerUser(user, busId);
+            String messages = DiscordMessageFormatter.formatUserJoinedMessage(user);
+            new DiscordWebhookService().sendDiscordMessage(messages);
+
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of(
                             "message", "Account created successfully",
