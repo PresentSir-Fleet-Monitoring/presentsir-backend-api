@@ -7,6 +7,8 @@ import com.ranjit.ps.service.UserService;
 import com.ranjit.ps.utils.DiscordMessageFormatter;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,21 +35,28 @@ public class AuthController {
 
     // Handle registration form submission
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute("user") @Valid User user, BindingResult result,
+    public  ResponseEntity<String> registerUser(@ModelAttribute("user") @Valid User user, BindingResult result,
                                @RequestParam("busId") long busId) {
+
         if (result.hasErrors()) {
-            return "register";
+            return ResponseEntity.badRequest().body("Invalid user data.");
         }
+
+        if (userService.isUserExist(user.getEmail())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("User with this email already exists.");
+        }
+
         try {
             userService.registerUser(user,busId);
 
             String messages = DiscordMessageFormatter.formatUserJoinedMessage(user);
             new DiscordWebhookService().sendDiscordMessage(messages);
 
-            return "redirect:/login";
+            return ResponseEntity.ok("User registered successfully. Please log in.");
         } catch (Exception e) {
-            result.rejectValue("email", "error.user", "An error occurred during registration.");
-            return "register";
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred during registration.");
         }
     }
 
