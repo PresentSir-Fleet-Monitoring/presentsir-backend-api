@@ -1,52 +1,105 @@
 package com.ranjit.ps.service;
 
-import com.ranjit.ps.model.BusQ;
-import com.ranjit.ps.model.Location;
+import com.ranjit.ps.exceptions.LocationNotFoundException;
+import com.ranjit.ps.exceptions.SessionNotFoundException;
+import com.ranjit.ps.model.dto.UserLocation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * LocationService is a Spring service class that manages a collection of BusQ objects.
+ * It allows creating, retrieving, updating, and processing location clients associated with buses.
+ *
+ * Copyright © 2024 Ranjit
+ * Author: Ranjit
+ */
 @Service
 public class LocationService {
-    private final Map<String, BusQ> buses = new HashMap<>();
 
-    // Creates and adds a new bus to the service
-    public BusQ createBusInQ(String busId) {
-        BusQ busQ = new BusQ(busId);
-        buses.put(busId, busQ);
-        System.out.println("Created bus with ID: " + busId);
-        return busQ;
+    // Map to store client locations based on session ID
+    private final Map<String, UserLocation> clientLocationMap = new HashMap<>();
+    private final SimpMessagingTemplate messagingTemplate;
+    private final BusQService busQService;
+
+    @Autowired
+    public LocationService(SimpMessagingTemplate messagingTemplate, BusQService busQService) {
+        this.messagingTemplate = messagingTemplate;
+        this.busQService = busQService;
     }
 
-    // Retrieves a bus by ID
-    public BusQ getBus(String busId) {
-        return buses.get(busId);
+    // Store location data for a specific session (or email)
+    public void storeLocation(String sessionId, UserLocation userLocation) {
+        clientLocationMap.put(sessionId, userLocation);
+        System.out.println("Stored location for session: " + sessionId + ", Location: " + userLocation);
     }
 
-    // Adds a location to a specific bus by ID
-    public void addLocationToBus(String busId, double latitude, double longitude) {
-        BusQ busQ = buses.get(busId);
-        if (busQ != null) {
-            busQ.addLocation(latitude, longitude);
+    // Retrieve location data for a specific session (or email)
+    public UserLocation getLocationBySession(String sessionId) {
+        return clientLocationMap.get(sessionId); // Returns null if session not found
+    }
+
+    // Remove location data for a specific session (or email)
+    public void removeLocationBySession(String sessionId) {
+        clientLocationMap.remove(sessionId); // Returns null if session not found
+    }
+
+    public UserLocation getLocationForClient(String sessionId) {
+        UserLocation userLocation = getLocationBySession(sessionId);
+        if (userLocation != null) {
+            System.out.println("Retrieved location for session: " + sessionId + " Location: " + userLocation);
+            return userLocation;
         } else {
-            System.out.println("Bus with ID " + busId + " not found.");
+            System.out.println("No location found for session: " + sessionId);
+            return null; // or handle as per your requirements
         }
     }
 
-    // GET EXACT BUS LOCATION
-    public Location getLocation(String busId){
-        BusQ busQ = buses.get(busId);
-        Location location = new Location();
-        location.setLatitude(busQ.getLocation().getLatitude());
-        location.setLongitude(busQ.getLocation().getLongitude());
-        return location;
-    }
+    // Method to send a message to a specific client using their session ID
+    public UserLocation broadcastToBus(long busId) {
+        String sessionId = null;
+        UserLocation userLocation = null;
 
-    // Processes all locations for each bus
-    public void processAllBusLocations() {
-        for (BusQ busQ : buses.values()) {
-            busQ.processLocations();
+        try {
+            // Retrieve the session ID for the given busId
+            sessionId = busQService.getLocationProviderClient(busId);
+
+            // Validate if a session ID was found for the bus
+            if (sessionId == null || sessionId.isEmpty()) {
+                String errorMsg = "No valid session found for busId: " + busId;
+                System.err.println(errorMsg);
+                throw new SessionNotFoundException(errorMsg);
+            }
+
+            // Retrieve the user location using the session ID
+            userLocation = getLocationBySession(sessionId);
+
+            // Validate if location data was found for the session
+            if (userLocation == null) {
+                String errorMsg = "No location data found for session: " + sessionId;
+                System.err.println(errorMsg);
+                throw new LocationNotFoundException(errorMsg);
+            }
+
+            // Broadcast the location update to the user
+            messagingTemplate.convertAndSendToUser(sessionId, "/topic/location/" + busId, userLocation);
+            System.out.println("Broadcasted location update for busId: " + busId + ", Location: " + userLocation);
+
+        } catch (SessionNotFoundException | LocationNotFoundException e) {
+            // Handle specific exceptions related to missing session or location
+            System.err.println("Error broadcasting location for busId: " + busId + ". Error: " + e.getMessage());
+            // Optionally, rethrow the exception or handle accordingly (e.g., return null)
+        } catch (Exception e) {
+            // Handle any other unexpected exceptions
+            String errorMsg = "Unexpected error occurred while broadcasting location for busId: " + busId;
+            System.err.println(errorMsg);
+            e.printStackTrace();  // Log full stack trace for debugging purposes
+            // Optionally, send an alert or report the issue to a monitoring system
         }
+
+        return userLocation;
     }
 }
