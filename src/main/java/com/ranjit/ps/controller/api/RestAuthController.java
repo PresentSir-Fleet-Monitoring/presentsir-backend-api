@@ -104,4 +104,26 @@ public class RestAuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/update")
+    public ResponseEntity<?> update(@Valid @RequestBody RegisterUserRequest request) {
+        User user = request.getUser();
+        long busId = request.getBusId();
+
+        try {
+            User registeredUser = userService.updateUser(user.getEmail(), user);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of(
+                            "message", "Account updated successfully",
+                            "userId", registeredUser.getEmail()
+                    ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while updating the account.");
+        }
+    }
 }
