@@ -32,7 +32,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/wss/**").permitAll()
                         .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**", "/WEB-INF/views/**").permitAll()
                         .requestMatchers("/resources/vendor/**").permitAll()
                         .requestMatchers("/actuator/mappings").permitAll()
@@ -41,7 +44,6 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/register", "/login?error=true").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
-                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/app/**").permitAll()
                         .requestMatchers("/index", "/users", "/buses").hasRole("ADMIN")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
