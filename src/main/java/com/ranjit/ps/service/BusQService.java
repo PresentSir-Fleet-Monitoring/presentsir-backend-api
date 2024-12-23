@@ -1,6 +1,9 @@
 package com.ranjit.ps.service;
 
 import com.ranjit.ps.model.BusQ;
+import com.ranjit.ps.sockets.ClientListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -14,6 +17,8 @@ import java.util.Map;
  */
 @Service
 public class BusQService {
+    private static final Logger logger = LoggerFactory.getLogger(BusQService.class);
+
     // Map to store BusQ objects with the bus ID as the key
     private final Map<Long, BusQ> buses = new HashMap<>();
 
@@ -25,7 +30,7 @@ public class BusQService {
     public void createBusQueue(long busId) {
         BusQ busQ = new BusQ(busId);
         buses.put(busId, busQ);
-        System.out.println("Created bus with ID: " + busId);
+        logger.info("Created bus with ID: " + busId);
     }
 
     /**
@@ -48,8 +53,9 @@ public class BusQService {
         BusQ busQ = buses.get(busId);
         if (busQ != null) {
             busQ.addClient(clientSessionId);
+            logger.info("CLIENT SESSION ID: "+clientSessionId+" ADDED  IN BUS QUEUE : "+busId);
         } else {
-            System.out.println("Bus with ID " + busId + " not found.");
+            logger.info("Bus with ID " + busId + " not found.");
         }
     }
 
@@ -63,10 +69,10 @@ public class BusQService {
         BusQ busQ = buses.get(busId);
         if (busQ != null) {
             String nextClient = busQ.peekNextClient();
-            System.out.println("Next client in bus " + busId + ": " + nextClient);
+            logger.info("Next client in bus " + busId + ": " + nextClient);
             return nextClient;
         } else {
-            System.out.println("Bus with ID " + busId + " not found.");
+            logger.info("Bus with ID " + busId + " not found.");
             return null;
         }
     }

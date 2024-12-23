@@ -33,6 +33,8 @@ public class App implements CommandLineRunner {
         for (int i = 0; i < buses.size(); i++) {
             busQService.createBusQueue(buses.get(i).getBusId());
         }
+
+        System.out.println("All Bus Queues Created Successfully");
     }
 
 }

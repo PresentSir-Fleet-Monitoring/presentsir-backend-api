@@ -3,6 +3,8 @@ package com.ranjit.ps.service;
 import com.ranjit.ps.exceptions.LocationNotFoundException;
 import com.ranjit.ps.exceptions.SessionNotFoundException;
 import com.ranjit.ps.model.dto.UserLocation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ import java.util.Map;
 @Service
 public class LocationService {
 
+    private static final Logger logger = LoggerFactory.getLogger(LocationService.class);
     // Map to store client locations based on session ID
     private final Map<String, UserLocation> clientLocationMap = new HashMap<>();
     private final SimpMessagingTemplate messagingTemplate;
@@ -34,7 +37,7 @@ public class LocationService {
     // Store location data for a specific session (or email)
     public void storeLocation(String sessionId, UserLocation userLocation) {
         clientLocationMap.put(sessionId, userLocation);
-        System.out.println("Stored location for session: " + sessionId + ", Location: " + userLocation);
+        logger.info("Stored location for session: " + sessionId + ", Location: " + userLocation);
     }
 
     // Retrieve location data for a specific session (or email)
@@ -45,15 +48,16 @@ public class LocationService {
     // Remove location data for a specific session (or email)
     public void removeLocationBySession(String sessionId) {
         clientLocationMap.remove(sessionId); // Returns null if session not found
+        logger.info("Client Removed from clientLocationMap ID : "+sessionId);
     }
 
     public UserLocation getLocationForClient(String sessionId) {
         UserLocation userLocation = getLocationBySession(sessionId);
         if (userLocation != null) {
-            System.out.println("Retrieved location for session: " + sessionId + " Location: " + userLocation);
+            logger.info("Retrieved location for session: " + sessionId + " Location: " + userLocation);
             return userLocation;
         } else {
-            System.out.println("No location found for session: " + sessionId);
+            logger.error("No location found for session: " + sessionId);
             return null; // or handle as per your requirements
         }
     }
@@ -65,6 +69,7 @@ public class LocationService {
 
         try {
             // Retrieve the session ID for the given busId
+            //TODO ADD extra filter very important Ranjit this is core part of application
             sessionId = busQService.getLocationProviderClient(busId);
 
             // Validate if a session ID was found for the bus
@@ -85,7 +90,9 @@ public class LocationService {
             }
 
             // Broadcast the location update to the user
-            messagingTemplate.convertAndSendToUser(sessionId, "/topic/location/" + busId, userLocation);
+            messagingTemplate.convertAndSend("/topic/location/" + busId, userLocation);
+
+
             System.out.println("Broadcasted location update for busId: " + busId + ", Location: " + userLocation);
 
         } catch (SessionNotFoundException | LocationNotFoundException e) {

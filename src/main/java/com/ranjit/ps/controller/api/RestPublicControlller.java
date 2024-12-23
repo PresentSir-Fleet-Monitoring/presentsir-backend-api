@@ -29,6 +29,7 @@ public class RestPublicControlller {
     public List<Bus> getAllBuses() {
         return busService.getAllBuses();
     }
+
     @GetMapping("/location")
     public ResponseEntity<Location> getAllBuses(@RequestParam long busId) {
         Location location = new Location();
