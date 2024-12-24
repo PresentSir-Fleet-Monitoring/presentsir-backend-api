@@ -11,4 +11,4 @@ COPY target/Presentsir.jar /app/Presentsir.jar
 EXPOSE 8080
 
 # Command to run the Spring Boot application
-ENTRYPOINT ["java", "-jar", "Presentsir.war"]
+ENTRYPOINT ["java", "-jar", "Presentsir.jar"]
