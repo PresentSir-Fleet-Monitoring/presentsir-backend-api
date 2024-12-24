@@ -9,7 +9,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -28,11 +27,15 @@ public class SecurityConfig {
     public SecurityConfig(JwtTokenProvider tokenProvider) {
         this.tokenProvider = tokenProvider;
     }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
+                .csrf().disable()
+                .cors().disable()
+                .authorizeRequests(auth -> auth
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/wss/**").permitAll()
                         .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**", "/WEB-INF/views/**").permitAll()
                         .requestMatchers("/resources/vendor/**").permitAll()
                         .requestMatchers("/actuator/mappings").permitAll()
@@ -41,6 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/register", "/login?error=true").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
+                        .requestMatchers("/app/**").permitAll()
                         .requestMatchers("/index", "/users", "/buses").hasRole("ADMIN")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/buses/**").hasRole("ADMIN")
@@ -51,7 +55,7 @@ public class SecurityConfig {
                         .loginPage("/login")
                         .loginProcessingUrl("/perform_login")
                         .defaultSuccessUrl("/defaultPage", true)
-                        .failureUrl("/ps/login?error=true")
+                        .failureUrl("/ps/login?error=true") // Redirect to error page
                         .failureHandler(authenticationFailureHandler())
                         .permitAll()
                 )
@@ -76,6 +80,7 @@ public class SecurityConfig {
     public AuthenticationManager authManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder =
                 http.getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder.parentAuthenticationManager(null);
         authenticationManagerBuilder
                 .userDetailsService(userDetailsService())
                 .passwordEncoder(passwordEncoder());
@@ -95,6 +100,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationFailureHandler authenticationFailureHandler() {
         return (request, response, exception) -> {
+            // Handle different types of authentication failure
             if (exception instanceof UsernameNotFoundException) {
                 response.sendRedirect("/ps/login?error=user_not_found");
             } else if (exception instanceof BadCredentialsException) {
@@ -112,5 +118,4 @@ public class SecurityConfig {
             response.sendRedirect("/ps/login?logout=true");
         };
     }
-
 }

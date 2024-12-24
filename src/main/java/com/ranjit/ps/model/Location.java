@@ -8,6 +8,15 @@ import lombok.*;
 public class Location {
     private double latitude;
     private double longitude;
+    private long busId;
+
+    public long getBusId() {
+        return busId;
+    }
+
+    public void setBusId(long busId) {
+        this.busId = busId;
+    }
 
     public double getLatitude() {
         return latitude;
