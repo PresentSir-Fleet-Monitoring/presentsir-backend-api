@@ -8,7 +8,10 @@ import com.ranjit.ps.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -16,7 +19,7 @@ import java.util.List;
 @RequestMapping("/api/public")
 public class RestPublicControlller {
     @Autowired
-    private BusService busService;
+    private final BusService busService;
     @Autowired
     private LocationService locationService;
 
@@ -28,6 +31,11 @@ public class RestPublicControlller {
     @GetMapping("/buses")
     public List<Bus> getAllBuses() {
         return busService.getAllBuses();
+    }
+
+    @GetMapping("/goodmorning")
+    public String goodMorning() {
+        return "GoodMorning Ranjit..";
     }
 
     @GetMapping("/location")
