@@ -2,7 +2,9 @@ package com.ranjit.ps.sockets;
 
 import com.ranjit.ps.model.dto.ClientInfo;
 import com.ranjit.ps.service.BusQService;
+import com.ranjit.ps.service.DiscordWebhookService;
 import com.ranjit.ps.service.LocationService;
+import com.ranjit.ps.utils.DiscordMessageFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,9 @@ public class ClientListener {
 
     @Autowired
     private LocationService locationService;
+
+    @Autowired
+    private DiscordWebhookService discordWebhookService;
     @Autowired
     private BusQService busQService;
 
@@ -46,6 +51,8 @@ public class ClientListener {
 
             logger.info("New client connected: Email = " + email + ", Bus ID = " + busId + ", Total: " + connectedClients.get());
 
+            discordWebhookService.sendDiscordMessage(DiscordMessageFormatter.formatNewClientConnectedMessage(String.valueOf(busId), email));
+
             // Increment to count to get no of clients connected
             connectedClients.incrementAndGet();
 
@@ -53,6 +60,8 @@ public class ClientListener {
 
             if (Objects.equals(iam, "sender")){
                 busQService.addClientToBusQueue(busId, sessionId);
+                String messages = DiscordMessageFormatter.formatStartLocationShareMessage(String.valueOf(busId), email);
+                new DiscordWebhookService().sendDiscordMessage(messages);
             }
 
         } catch (Exception e) {

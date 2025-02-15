@@ -18,5 +18,20 @@ public class DiscordMessageFormatter {
                "- **Contact:** " + user.getContact();
     }
 
+    public static String formatStartLocationShareMessage(String busId, String email) {
+
+        return "**" + "Someone Started Sharing Location!**\n\n" +
+                "**Details:**\n" +
+                "- **Email:** " + email + "\n" +
+                "- **Bus ID:** " + busId + "\n";
+    }
+
+    public static String formatNewClientConnectedMessage(String busId, String email) {
+
+        return "**" + "New User Connected!**\n\n" +
+                "**Details:**\n" +
+                "- **Email:** " + email + "\n" +
+                "- **Bus ID:** " + busId + "\n";
+    }
 
 }
