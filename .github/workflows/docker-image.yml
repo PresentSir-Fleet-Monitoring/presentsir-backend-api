@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: '17'
-          distribution: 'adoptopenjdk'  # This line is added to specify the distribution
+          distribution: 'openjdk:17-jdk-slim'  # This line is added to specify the distribution
 
 
       - name: Build the project (Maven)
