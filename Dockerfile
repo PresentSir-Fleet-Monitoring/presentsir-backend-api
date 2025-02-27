@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy the JAR file into the container
-COPY out/artifacts/Presentsir_jar/Presentsir.jar /app/Presentsir.jar
+COPY target/Presentsir.jar /app/Presentsir.jar
 
 # Expose the application port
 EXPOSE 8080
