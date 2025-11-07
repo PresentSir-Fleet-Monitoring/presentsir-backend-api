@@ -3,7 +3,7 @@
         <withJansi>true</withJansi>
         <encoder>
             <pattern>
-                %highlight(%logger{36} - %msg)%n%n
+                %highlight(%logger{36} - %msg)%n
             </pattern>
         </encoder>
     </appender>

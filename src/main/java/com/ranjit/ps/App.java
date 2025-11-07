@@ -3,6 +3,7 @@ package com.ranjit.ps;
 import com.ranjit.ps.model.Bus;
 import com.ranjit.ps.service.BusQService;
 import com.ranjit.ps.service.BusService;
+import com.ranjit.ps.service.BusWebClientService;
 import com.ranjit.ps.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -19,7 +20,7 @@ public class App implements CommandLineRunner {
     @Autowired
     private BusQService busQService;
     @Autowired
-    private BusService busService;
+    private BusWebClientService busService;
 
     public static void main(String[] args) {
         SpringApplication.run(App.class, args);

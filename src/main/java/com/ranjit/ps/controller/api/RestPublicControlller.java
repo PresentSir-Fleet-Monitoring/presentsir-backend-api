@@ -4,6 +4,7 @@ import com.ranjit.ps.model.Bus;
 import com.ranjit.ps.model.Location;
 import com.ranjit.ps.model.dto.UserLocation;
 import com.ranjit.ps.service.BusService;
+import com.ranjit.ps.service.BusWebClientService;
 import com.ranjit.ps.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,13 +25,16 @@ public class RestPublicControlller {
     private LocationService locationService;
 
     @Autowired
+    private BusWebClientService busWebClientService;
+
+    @Autowired
     public RestPublicControlller(BusService busService) {
         this.busService = busService;
     }
 
     @GetMapping("/buses")
     public List<Bus> getAllBuses() {
-        return busService.getAllBuses();
+        return busWebClientService.getAllBuses();
     }
 
     @GetMapping("/goodmorning")
