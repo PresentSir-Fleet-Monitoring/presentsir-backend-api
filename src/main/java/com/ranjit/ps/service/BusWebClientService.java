@@ -17,7 +17,7 @@ public class BusWebClientService {
     private final ObjectMapper objectMapper;
 
     private static final String GITHUB_URL =
-            "https://raw.githubusercontent.com/ranjit485/elite-backend-configration/refs/heads/main/routes.json";
+            "https://raw.githubusercontent.com/ranjit485/elite-backend-configration/main/routes.json";
 
     public BusWebClientService(WebClient.Builder builder, ObjectMapper objectMapper) {
         this.webClient = builder.build();
