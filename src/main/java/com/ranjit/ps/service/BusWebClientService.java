@@ -1,12 +1,13 @@
 package com.ranjit.ps.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ranjit.ps.model.Bus;
-import com.ranjit.ps.repository.BusRepository;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -35,7 +36,7 @@ public class BusWebClientService {
 
     private List<Bus> mapToBusList(JsonNode rootNode) {
 
-        if (!rootNode.isArray()) {
+        if (rootNode == null || !rootNode.isArray()) {
             return List.of();
         }
 
@@ -45,8 +46,6 @@ public class BusWebClientService {
             Bus bus = new Bus();
             bus.setBusId(node.get("busId").asLong());
             bus.setRouteName(node.get("routeName").asText());
-
-            // users NOT touched → stays empty Set<User>
             buses.add(bus);
         }
 
