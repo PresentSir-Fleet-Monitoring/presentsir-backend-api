@@ -12,42 +12,44 @@ import java.util.List;
 @Service
 public class BusWebClientService {
 
-    private final WebClient primaryClient;
-    private final WebClient fallbackClient;
+    private final WebClient webClient;
+    private final ObjectMapper objectMapper;
 
-    public BusWebClientService(WebClient.Builder builder) {
+    private static final String GITHUB_URL =
+            "https://raw.githubusercontent.com/ranjit485/elite-backend-configration/refs/heads/main/routes.json";
 
-        this.primaryClient = builder
-                .baseUrl("https://api.jsonbin.io/v3/b/68fdd11ed0ea881f40bcb67c")
-                .build();
-
-        this.fallbackClient = builder
-                .baseUrl("https://raw.githubusercontent.com/ranjit485/elite-backend-configration/refs/heads/main/routes.json")
-                .build();
+    public BusWebClientService(WebClient.Builder builder, ObjectMapper objectMapper) {
+        this.webClient = builder.build();
+        this.objectMapper = objectMapper;
     }
 
     public List<Bus> getAllBuses() {
-        return fetch(primaryClient)
-                .onErrorResume(ex -> {
-                    System.err.println("Primary failed, switching to fallback");
-                    return fetch(fallbackClient);
-                })
+        return webClient.get()
+                .uri(GITHUB_URL)
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .map(this::mapToBusList)
                 .onErrorReturn(List.of())
                 .block();
     }
 
-    private Mono<List<Bus>> fetch(WebClient client) {
+    private List<Bus> mapToBusList(JsonNode rootNode) {
 
-        String baseUrl = client.mutate().build().toString();
+        if (!rootNode.isArray()) {
+            return List.of();
+        }
 
-        boolean needsMetaFalse = baseUrl.contains("jsonbin.io");
+        List<Bus> buses = new ArrayList<>();
 
-        return client.get()
-                .uri(uriBuilder -> needsMetaFalse
-                        ? uriBuilder.queryParam("meta", "false").build()
-                        : uriBuilder.build()
-                )
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<Bus>>() {});
+        for (JsonNode node : rootNode) {
+            Bus bus = new Bus();
+            bus.setBusId(node.get("busId").asLong());
+            bus.setRouteName(node.get("routeName").asText());
+
+            // users NOT touched → stays empty Set<User>
+            buses.add(bus);
+        }
+
+        return buses;
     }
 }
