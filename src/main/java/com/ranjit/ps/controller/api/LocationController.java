@@ -1,11 +1,14 @@
 package com.ranjit.ps.controller.api;
 
 import com.ranjit.ps.model.dto.UserLocation;
+import com.ranjit.ps.model.dto.PublicLocation; // Import the new DTO
 import com.ranjit.ps.service.LocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
@@ -18,26 +21,32 @@ public class LocationController {
     private LocationService locationService;
 
     /**
-     * Handle incoming location updates from the client.
-     *
-     * @param headerAccessor the STOMP header accessor containing metadata such as session ID and custom headers.
-     * @param userLocation   the UserLocation payload sent from the client.
+     * EXISTING: Handle high-frequency bus location updates.
      */
     @MessageMapping("/location")
     public void updateLocation(StompHeaderAccessor headerAccessor, UserLocation userLocation) {
-
-        // Log received data
-        logger.info("Received location: Email = {}, Bus ID = {}, Latitude = {}, Longitude = {}",
-                userLocation.getUserEmail(), userLocation.getBusId(), userLocation.getLatitude(), userLocation.getLongitude());
-
-        // Retrieve and log session ID
+        logger.info("Bus Location: Email = {}, Bus ID = {}", userLocation.getUserEmail(), userLocation.getBusId());
+        
         String sessionId = headerAccessor.getSessionId();
-        logger.info("Session ID: {}", sessionId);
-
-        // Store the location in LocationService
         locationService.storeLocation(sessionId, userLocation);
-
-        // Optionally broadcast the location to relevant clients
         locationService.broadcastToBus(userLocation.getBusId());
+    }
+
+    /**
+     * NEW: Handle Snapchat-style Discovery Pins (Footprints).
+     * Broadcasts to all users subscribed to /topic/public-users.
+     */
+    @MessageMapping("/public-location")
+    @SendTo("/topic/public-users")
+    public PublicLocation dropDiscoveryPin(@Payload PublicLocation location) {
+        // Log the discovery pin drop
+        logger.info("Discovery Pin Dropped by: {} ({}) at [{}, {}]", 
+                    location.getName(), location.getEmail(), location.getLat(), location.getLng());
+
+        // Stamp the current server time for the "time-ago" logic on frontend
+        location.setTimestamp(System.currentTimeMillis());
+
+        // Return the object; @SendTo handles the broadcast automatically
+        return location;
     }
 }
