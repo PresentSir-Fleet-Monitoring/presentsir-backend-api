@@ -1,41 +1,41 @@
 package com.ranjit.ps;
 
-import com.ranjit.ps.model.Bus;
-import com.ranjit.ps.service.BusQService;
-import com.ranjit.ps.service.BusService;
-import com.ranjit.ps.service.BusWebClientService;
-import com.ranjit.ps.service.LocationService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
+import org.springframework.boot.SpringApplication;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.net.InetAddress;
 
-@SpringBootApplication(scanBasePackages = "com.ranjit.ps")
-public class App implements CommandLineRunner {
+@SpringBootApplication
+public class App {
 
-    @Autowired
-    private BusQService busQService;
-    @Autowired
-    private BusWebClientService busService;
+    @Value("${server.port:8080}")
+    private String port;
+
+    @Value("${server.servlet.context-path:}")
+    private String contextPath;
 
     public static void main(String[] args) {
         SpringApplication.run(App.class, args);
     }
 
-    @Override
-    public void run(String... args) {
+    @EventListener(ApplicationReadyEvent.class)
+    public void printWebSocketUrl() throws Exception {
 
-        List<Bus> buses = busService.getAllBuses();
+        String ip = InetAddress.getLocalHost().getHostAddress();
 
-        for (int i = 0; i < buses.size(); i++) {
-            busQService.createBusQueue(buses.get(i).getBusId());
-        }
+        System.out.println("======================================");
+        System.out.println("🚀 Application Started Successfully");
+        System.out.println("🌐 WebSocket Endpoint (SockJS enabled):");
+        System.out.println("👉 ws://" + ip + ":" + port + contextPath + "/ws");
 
-        System.out.println("All Bus Queues Created Successfully");
+        System.out.println("\n🟢 STOMP Destinations (Bus Location):");
+        System.out.println("   ➤ Send bus location (driver): /app/bus-location");
+        System.out.println("   ➤ Subscribe live bus location: /topic/bus-location/{busId}");
+        System.out.println("   ➤ Send public discovery pin: /app/public-location");
+        System.out.println("   ➤ Subscribe public pins: /topic/public-users");
+        System.out.println("======================================");
     }
-
 }
