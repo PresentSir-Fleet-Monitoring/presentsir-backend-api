@@ -18,13 +18,13 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
 @Component
 public class ClientListener {
+
     private static final Logger logger = LoggerFactory.getLogger(ClientListener.class);
+
     private final AtomicInteger connectedClients = new AtomicInteger(0);
 
-    // This map is created because disconnect event listener is not getting headers
     private final ConcurrentHashMap<String, ClientInfo> clientSessionMap = new ConcurrentHashMap<>();
 
     @Autowired
@@ -32,69 +32,91 @@ public class ClientListener {
 
     @Autowired
     private DiscordWebhookService discordWebhookService;
+
     @Autowired
     private BusQService busQService;
 
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectEvent event) {
-        logger.info("SessionConnectEvent triggered");
 
-        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        logger.info("Headers: " + headerAccessor.toNativeHeaderMap());
+        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
 
         try {
-            String iam = headerAccessor.getNativeHeader("iam").get(0);
-            String email = headerAccessor.getNativeHeader("email").get(0);
-            long busId = Long.parseLong(headerAccessor.getNativeHeader("busId").get(0));
+            String sessionId = accessor.getSessionId();
 
-            String sessionId = headerAccessor.getSessionId();
+            String iam = getHeader(accessor, "iam");
+            String email = getHeader(accessor, "email");
+            String busIdStr = getHeader(accessor, "busId");
 
-            logger.info("New client connected: Email = " + email + ", Bus ID = " + busId + ", Total: " + connectedClients.get());
+            if (email == null || busIdStr == null) {
+                logger.warn("Missing required headers. Connection rejected.");
+                return;
+            }
 
-            discordWebhookService.sendDiscordMessage(DiscordMessageFormatter.formatNewClientConnectedMessage(String.valueOf(busId), email));
+            long busId = Long.parseLong(busIdStr);
 
-            // Increment to count to get no of clients connected
             connectedClients.incrementAndGet();
 
             clientSessionMap.put(sessionId, new ClientInfo(busId, email));
 
-            if (Objects.equals(iam, "sender")){
-                busQService.addClientToBusQueue(busId, sessionId);
-                String messages = DiscordMessageFormatter.formatStartLocationShareMessage(String.valueOf(busId), email);
-                new DiscordWebhookService().sendDiscordMessage(messages);
+            logger.info("Client connected: {} for bus {}", email, busId);
+
+            discordWebhookService.sendDiscordMessage(
+                    DiscordMessageFormatter.formatNewClientConnectedMessage(
+                            String.valueOf(busId), email)
+            );
+
+            if ("sender".equals(iam)) {
+
+                boolean added = busQService.addClientToBusQueue(busId, sessionId);
+
+                if (!added) {
+                    logger.warn("Another sender already active for bus {}", busId);
+                    return;
+                }
+
+                discordWebhookService.sendDiscordMessage(
+                        DiscordMessageFormatter.formatStartLocationShareMessage(
+                                String.valueOf(busId), email)
+                );
             }
 
         } catch (Exception e) {
-            logger.error("Error during WebSocket connect event: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Error during connect event", e);
         }
-
     }
 
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-        logger.info("SessionDisconnectEvent triggered");
 
         String sessionId = event.getSessionId();
-        logger.info("Disconnected session ID: " + sessionId);
 
-        // Decrement to count to get no of clients connected
+        ClientInfo clientInfo = clientSessionMap.remove(sessionId);
+
+        if (clientInfo == null) {
+            logger.warn("Disconnect event for unknown session {}", sessionId);
+            return;
+        }
+
         connectedClients.decrementAndGet();
-
-        ClientInfo clientInfo = clientSessionMap.get(sessionId);
 
         locationService.removeLocationBySession(sessionId);
         busQService.removeClientFromBusQueue(clientInfo.getBusId(), sessionId);
-        connectedClients.decrementAndGet();
 
-        logger.info("Client removed from clientSessionMap :"+clientSessionMap.remove(sessionId));
+        logger.info("Client disconnected: {}. Remaining: {}",
+                clientInfo.getEmail(),
+                connectedClients.get());
+    }
 
-        logger.info("Client disconnected: " + clientInfo + ", Remaining clients: " + connectedClients.get());
-
+    private String getHeader(StompHeaderAccessor accessor, String key) {
+        if (accessor.getNativeHeader(key) != null &&
+                !accessor.getNativeHeader(key).isEmpty()) {
+            return accessor.getNativeHeader(key).get(0);
+        }
+        return null;
     }
 
     public int getConnectedClients() {
         return connectedClients.get();
     }
-
 }
